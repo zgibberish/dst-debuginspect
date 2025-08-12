@@ -4,6 +4,12 @@ This is the source repo for the DST mod Debug Inspect (and its server-side exten
 
 Please report bugs in Issues, contributions are greatly appreciated!
 
+## Workshop Mod
+
+- [Debug Inspect](https://steamcommunity.com/sharedfiles/filedetails/?id=3547304515)
+
+- [Debug Inspect (Server)](https://steamcommunity.com/sharedfiles/filedetails/?id=3547305250)
+
 ## Previews
 
 ### Client
