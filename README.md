@@ -23,3 +23,7 @@ Please report bugs in Issues, contributions are greatly appreciated!
 ### Server
 
 ![](img/preview_server.png)
+
+## Open source tools used
+
+- **serpent.lua:** (MIT license) [source](https://github.com/pkulchenko/serpent)
