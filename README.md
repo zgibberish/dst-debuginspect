@@ -1,6 +1,6 @@
 # Debug Inspect
 
-This is the source repo for the DST mod Debug Inspect (and its server-side extension), changes here would be released on Steam Workshop every new version.
+This is the source repo for the DST mod Debug Inspect (and its server-side extension), changes here will be released on Steam Workshop every new version.
 
 Please report bugs in Issues, contributions are greatly appreciated!
 
