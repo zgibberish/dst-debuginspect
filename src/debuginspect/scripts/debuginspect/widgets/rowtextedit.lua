@@ -20,7 +20,7 @@ function DIRowTextEdit:Layout_TextEdit()
 	self.background_right:SetSize(region_w, region_h)
 	self.background_right:SetPosition(self.width/2 +region_w/2, 0)
 
-	self.textedit_value = self.background_right:AddChild(TextEdit(DIConstants.FONT, DIConstants.FONTSIZE))
+	self.textedit_value = self.background_right:AddChild(TextEdit(DIConstants.FONT_MONO, DIConstants.FONTSIZE))
 	self.textedit_value:SetRegionSize(region_w -self.padding*2, region_h)
 	self.textedit_value:SetPosition(0, 0)
 	self.textedit_value:SetHAlign(ANCHOR_LEFT)

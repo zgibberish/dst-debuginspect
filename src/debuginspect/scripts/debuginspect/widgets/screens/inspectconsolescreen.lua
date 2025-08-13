@@ -48,7 +48,7 @@ local InspectConsoleScreen = Class(Screen, function(self)
 	self.background_textedit:SetSize(region_w -self.ITEM_PADDING*2, self.ITEM_HEIGHT)
 	self.background_textedit:SetTint(unpack(DIConstants.COLORS.OVERLAY_HIGHLIGHTED))
 	self.background_textedit:SetPosition(0, -12)
-	self.inputbar = self.root:AddChild(TextEdit(DIConstants.FONT, DIConstants.FONTSIZE))
+	self.inputbar = self.root:AddChild(TextEdit(DIConstants.FONT_MONO, DIConstants.FONTSIZE))
 	do
 		local w, h = self.background_textedit:GetSize()
 		self.inputbar:SetRegionSize(w -self.ITEM_PADDING*2, h)

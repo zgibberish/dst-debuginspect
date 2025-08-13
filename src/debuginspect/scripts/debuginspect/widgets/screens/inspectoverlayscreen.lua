@@ -139,7 +139,7 @@ local InspectOverlayScreen = Class(Screen, function(self, obj, remote_explore_mo
 			self.filter_bar:SetTint(unpack(DIConstants.COLORS.BUTTON.BG_NORMAL))
  			self.filter_bar:SetSize(region_w, region_h)
 			self.filter_bar:SetPosition(self.ITEM_HEIGHT*12.5 + self.ITEM_PADDING*4, 0)
-			self.filter_bar.textedit = self.filter_bar:AddChild(TextEdit(DIConstants.FONT, DIConstants.FONTSIZE))
+			self.filter_bar.textedit = self.filter_bar:AddChild(TextEdit(DIConstants.FONT_MONO, DIConstants.FONTSIZE))
 			self.filter_bar.textedit:SetRegionSize(region_w -self.ITEM_PADDING*2, region_h)
 			self.filter_bar.textedit:SetHAlign(ANCHOR_LEFT)
 			self.filter_bar.textedit.idle_text_color = DIConstants.COLORS.FG_NORMAL
