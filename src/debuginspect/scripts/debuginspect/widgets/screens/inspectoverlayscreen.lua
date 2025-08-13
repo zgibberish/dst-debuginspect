@@ -150,12 +150,18 @@ local InspectOverlayScreen = Class(Screen, function(self, obj, remote_explore_mo
 			self.filter_bar.textedit.placeholder_text:SetHAlign(ANCHOR_LEFT)
 			self.filter_bar.textedit.placeholder_text:SetColour(unpack(DIConstants.COLORS.FG_MID))
 			self.filter_bar.textedit.OnTextInputted = function()
+				-- only update per-keystroke to update the placeholder text
 				local user_input = self.filter_bar.textedit:GetString()
 				if user_input == "" then
 					self.filter_bar.textedit.placeholder_text:Show()
 				else
 					self.filter_bar.textedit.placeholder_text:Hide()
 				end
+			end
+			self.filter_bar.textedit.OnTextEntered = function()
+				-- maybe dont re-filter every keystroke, but only when you hit enter,
+				-- cuz it lags SO BADLY on huge tables (like 1k+ items)
+				local user_input = self.filter_bar.textedit:GetString()
 				self.filter_key = (user_input ~= "") and user_input or nil
 				self:Update()
 			end
@@ -318,8 +324,6 @@ function InspectOverlayScreen:Update()
 		self.header:SetString(obj_type)
 		table.insert(items, DIRowText(self.BG_WIDTH, self.ITEM_HEIGHT, self.ITEM_PADDING, "value", tostring(self.current), DIConstants.COLORS.TYPES.boolean))
 	elseif obj_type == "table" then
-		self.header:SetString(rawstring(self.current).." ("..tostring(table_key_count(self.current)).." fields)")
-
 		local sorted_keys = {}
 
 		for k,_ in pairs(self.current) do
@@ -332,6 +336,12 @@ function InspectOverlayScreen:Update()
 		table.sort(sorted_keys, function(a, b)
 			return tostring(a) < tostring(b)
 		end)
+
+		local header_str = rawstring(self.current).." ("..tostring(table_key_count(self.current)).." fields)"
+		if self.filter_key then
+			header_str = header_str.." ("..tostring(#sorted_keys).." found)"
+		end
+		self.header:SetString(header_str)
 
 		local function add_field_row(k)
 			local v = self.current[k]

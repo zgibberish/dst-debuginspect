@@ -1,7 +1,7 @@
 local DIConstants = {
 	FONT = CODEFONT,
 	FONTSIZE = 16,
-	FONTSIZE_HEADER = 24,
+	FONTSIZE_HEADER = 22,
 	COLORS = {
 		PANEL = {0, 0, 0, 0.75},
 		OVERLAY_NORMAL = {0, 0, 0, 0.4},
