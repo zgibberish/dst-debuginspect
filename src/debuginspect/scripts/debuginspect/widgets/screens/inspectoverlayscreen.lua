@@ -11,6 +11,7 @@ local ScrollableList = require "widgets.scrollablelist"
 local TextEdit = require "widgets.textedit"
 local Text = require "widgets.text"
 local Widget = require "widgets.widget"
+local InspectFunctionPopup = require "debuginspect.widgets.screens.inspectfunctionpopup"
 
 local function table_key_count(obj_table)
 	local count = 0
@@ -379,14 +380,25 @@ function InspectOverlayScreen:Update()
 					end
 				end))
 			elseif obj_type_v == "function" then
-				table.insert(items, DIRowText(self.BG_WIDTH, self.ITEM_HEIGHT, self.ITEM_PADDING, k, rawstring(v), DIConstants.COLORS.TYPES["function"]))
+				local row = DIRowButton(
+					self.BG_WIDTH,
+					self.ITEM_HEIGHT,
+					self.ITEM_PADDING,
+					k,
+					rawstring(v)
+				):SetOnClick(function()
+					TheFrontEnd:PushScreen(InspectFunctionPopup(v))
+				end)
+				row.background_right:SetTextColour(unpack(DIConstants.COLORS.TYPES["function"]))
+				row.background_right:SetTextFocusColour(unpack(DIConstants.COLORS.TYPES["function"]))
+				table.insert(items, row)
 			else -- userdata, threads, proxied objects (like TheSim), etc
 				table.insert(items, DIRowText(self.BG_WIDTH, self.ITEM_HEIGHT, self.ITEM_PADDING, k, rawstring(v), DIConstants.COLORS.TYPES.other))
 			end
 		end
 
 		for _,k in ipairs(sorted_keys) do add_field_row(k) end
-	else -- functions, proxied objects (like TheSim), etc
+	else
 		self.header:SetString(rawstring(self.current))
 	end
 

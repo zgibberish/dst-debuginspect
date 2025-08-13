@@ -16,3 +16,26 @@ AddClientModRPCHandler('gbj_debuginspect', 'display_obj', function(obj_serialize
 	local remote_explore_mode = true
 	DICommon.OpenInspectOverlay(obj, remote_explore_mode)
 end)
+
+-- (see: https://forums.kleientertainment.com/forums/topic/126766-tutorial-how-to-add-talking-fonts-to-the-game/#findComment-1433374)
+
+local function load_custom_fonts()
+	GLOBAL.TheSim:UnloadFont("jetbrainsmono")
+	GLOBAL.TheSim:UnloadPrefabs({"gbj_debuginspect_fonts"})
+
+	local font_prefab = GLOBAL.Prefab(
+		"gbj_debuginspect_fonts",
+		nil,
+		{Asset("FONT", GLOBAL.resolvefilepath("fonts/jetbrainsmono.zip"))}
+	)
+	GLOBAL.RegisterSinglePrefab(font_prefab)
+	GLOBAL.TheSim:LoadPrefabs({font_prefab.name})
+    GLOBAL.TheSim:LoadFont(GLOBAL.resolvefilepath("fonts/jetbrainsmono.zip"), "jetbrainsmono")
+    GLOBAL.TheSim:SetupFontFallbacks("jetbrainsmono", GLOBAL.DEFAULT_FALLBACK_TABLE)
+end
+
+local original_Start = GLOBAL.Start
+function GLOBAL.Start(...)
+	original_Start(...)
+	load_custom_fonts()
+end

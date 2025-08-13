@@ -1,5 +1,6 @@
 local InspectConsoleScreen = require "debuginspect.widgets.screens.inspectconsolescreen"
 local InspectOverlayScreen = require "debuginspect.widgets.screens.inspectoverlayscreen"
+local InspectFunctionPopup = require "debuginspect.widgets.screens.inspectfunctionpopup"
 
 local DICommon = {}
 
@@ -31,6 +32,25 @@ function DICommon.FindScreen(class)
 end
 
 function DICommon.OpenInspectOverlay(obj, remote_explore_mode, remote_explore_query)
+	if type(obj) == "function" then
+		-- we have a dedicated function details ui
+		local functiondetailsoverlay, index = DICommon.FindScreen(InspectFunctionPopup)
+		local overlay, index = DICommon.FindScreen(InspectOverlayScreen)
+		if overlay then
+			-- inspect overlay always opens by default,
+			-- close it since we're not using it this time
+			overlay:Close()
+		end
+
+		if functiondetailsoverlay then
+			overlay:Close()
+			TheFrontEnd:PushScreen(InspectFunctionPopup(obj))
+			return
+		end
+		TheFrontEnd:PushScreen(InspectFunctionPopup(obj))
+		return
+	end
+
 	local remote_explore_mode = remote_explore_mode or false
 	local overlay, index = DICommon.FindScreen(InspectOverlayScreen)
 	local screen_on_top = overlay and index == #TheFrontEnd.screenstack

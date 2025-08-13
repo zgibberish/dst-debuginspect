@@ -1,5 +1,6 @@
 local DIConstants = {
 	FONT = CODEFONT,
+	FONT_MONO = "jetbrainsmono",
 	FONTSIZE = 16,
 	FONTSIZE_HEADER = 22,
 	COLORS = {
