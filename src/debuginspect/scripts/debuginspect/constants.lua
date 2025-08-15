@@ -19,13 +19,6 @@ local DIConstants = {
 			FG_FOCUSED = {1, 1, 1, 1},
 		},
 
-		ROWBUTTON = { -- clickable row (mainly used for table type record)
-			BG_NORMAL = {0, 0, 0, 0.4}, -- same as OVERLAY_NORMAL
-			FG_NORMAL = {1, 0.7, 0.5, 1}, -- same as TYPES.table
-			BG_FOCUSED = {0.2, 0.2, 0.2, 0.4}, -- same as OVERLAY_HIGHLIGHTED
-			FG_FOCUSED = {1, 0.8, 0.8, 1}, -- TYPES.table but a bit brighter
-		},
-
 		TYPES = {
 			["string"] = {1, 1, 1, 1},
 			["number"] = {0.6, 1, 0.9, 1},

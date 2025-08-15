@@ -1,11 +1,11 @@
 local DIButton = require "debuginspect.widgets.button"
 local DIConstants = require "debuginspect.constants"
-local Screen = require "widgets.screen"
-local Text = require "widgets.text"
-local Image = require "widgets.image"
-local DIRowText = require "debuginspect.widgets.rowtext"
 local DIRowTextEdit = require "debuginspect.widgets.rowtextedit"
+local DIRowText = require "debuginspect.widgets.rowtext"
+local Image = require "widgets.image"
+local Screen = require "widgets.screen"
 local ScrollableList = require "widgets.scrollablelist"
+local Text = require "widgets.text"
 local Widget = require "widgets.widget"
 
 local function file_read_section(filename, line_start, line_end)
@@ -62,30 +62,30 @@ function InspectFunctionPopup:Layout()
 	self.header:SetString("Function Details")
 
 	self.row_type = self.root:AddChild(DIRowText(
-		region_w,
+		region_w -self.ITEM_PADDING*2,
 		self.ITEM_HEIGHT,
 		self.ITEM_PADDING,
 		"Type",
 		self.info.what
 	))
 	self.row_type:SetPosition( -- below header
-		-region_w/2,
+		-region_w/2 +self.ITEM_PADDING,
 		region_h/2 -self.ITEM_HEIGHT/2 -self.ITEM_PADDING -self.ITEM_HEIGHT-self.ITEM_PADDING
 	)
 
 	local str_source = self.info.source.."@"..tostring(self.info.linedefined)..":"..tostring(self.info.lastlinedefined)
 	self.row_src = self.root:AddChild(DIRowTextEdit(
-		region_w,
+		region_w -self.ITEM_PADDING*2,
 		self.ITEM_HEIGHT,
 		self.ITEM_PADDING,
 		"Source",
 		str_source
 	))
 	self.row_src:SetPosition( -- below type
-		-region_w/2,
+		-region_w/2 +self.ITEM_PADDING,
 		region_h/2 -self.ITEM_HEIGHT/2 -self.ITEM_PADDING -self.ITEM_HEIGHT*2-self.ITEM_PADDING*2
 	)
-	self.row_src.textedit_value.OnTextInput = function() end -- disable editing
+	self.row_src.textedit.textedit.OnTextInput = function() end -- disable editing
 
 	-- source preview
 	self.src_preview_bg = self.root:AddChild(Image("images/global.xml", "square.tex"))

@@ -1,7 +1,5 @@
 local DIConstants = require "debuginspect.constants"
-local ImageButton = require "widgets.imagebutton"
-local Image = require "widgets.image"
-local Text = require "widgets.text"
+local DITextLabel = require "debuginspect.widgets.textlabel"
 local Widget = require "widgets.widget"
 
 -- basic row with only the left column, no specifc functionalities
@@ -21,20 +19,14 @@ local DIRow = Class(Widget, function(self, width, height, padding, name)
 end)
 
 function DIRow:Layout()
-	self.background_left = self:AddChild(Image("images/global.xml", "square.tex"))
-	self.background_left:SetTint(unpack(DIConstants.COLORS.OVERLAY_NORMAL))
-	self.background_left:SetSize(self.width/2 -self.padding*2, self.height)
-	self.background_left:SetPosition(self.width/4, 0)
-
-	self.text_name = self.background_left:AddChild(Text(DIConstants.FONT, DIConstants.FONTSIZE, tostring(self.name)))
-	self.text_name:SetRegionSize(self.width/2 -self.padding*2, self.height)
-	self.text_name:SetHAlign(ANCHOR_LEFT)
-	self.text_name:SetPosition(self.padding, 0)
+	local label_width = self.width/2 -self.padding/2
+	self.label_key = self:AddChild(DITextLabel(label_width, self.height, self.padding, tostring(self.name)))
+	self.label_key:SetPosition(label_width/2, 0)
 
 	local obj_type_k = type(self.name)
-	local type_color = DIConstants.COLORS.TYPES[obj_type_k]
+	local type_color = DIConstants.COLORS.TYPES[obj_type_k] or DIConstants.COLORS.TYPES["other"]
 	if type_color then
-		self.text_name:SetColour(unpack(type_color))
+		self.label_key.text:SetColour(unpack(type_color))
 	end
 
 	return self

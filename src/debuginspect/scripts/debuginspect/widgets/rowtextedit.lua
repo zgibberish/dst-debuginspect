@@ -1,7 +1,5 @@
-local DIConstants = require "debuginspect.constants"
 local DIRow = require "debuginspect.widgets.row"
-local Image = require "widgets.image"
-local TextEdit = require "widgets.textedit"
+local DITextEdit = require "debuginspect.widgets.textedit"
 
 local DIRowTextEdit = Class(DIRow, function(self, width, height, padding, name, value)
 	DIRow._ctor(self, width, height, padding, name)
@@ -12,26 +10,16 @@ local DIRowTextEdit = Class(DIRow, function(self, width, height, padding, name, 
 end)
 
 function DIRowTextEdit:Layout_TextEdit()
-	local region_w = self.width/2 -self.padding
-	local region_h = self.height
-
-	self.background_right = self:AddChild(Image("images/global.xml", "square.tex"))
-	self.background_right:SetTint(unpack(DIConstants.COLORS.OVERLAY_HIGHLIGHTED))
-	self.background_right:SetSize(region_w, region_h)
-	self.background_right:SetPosition(self.width/2 +region_w/2, 0)
-
-	self.textedit_value = self.background_right:AddChild(TextEdit(DIConstants.FONT_MONO, DIConstants.FONTSIZE))
-	self.textedit_value:SetRegionSize(region_w -self.padding*2, region_h)
-	self.textedit_value:SetPosition(0, 0)
-	self.textedit_value:SetHAlign(ANCHOR_LEFT)
-	self.textedit_value.idle_text_color = DIConstants.COLORS.FG_NORMAL
-	self.textedit_value.edit_text_color = DIConstants.COLORS.FG_NORMAL
-	self.textedit_value:SetColour(unpack(DIConstants.COLORS.FG_NORMAL))
-	self.textedit_value:SetEditCursorColour(unpack(DIConstants.COLORS.FG_NORMAL))
-	self.textedit_value:SetString(tostring(self.value))
-	self.textedit_value:SetForceEdit(true)
-	self.textedit_value.OnTextEntered = function()
-		self.value = self.textedit_value:GetLineEditString()
+	local textedit_width = self.width/2 -self.padding/2
+	self.textedit = self:AddChild(DITextEdit(
+		textedit_width,
+		self.height,
+		self.padding
+	))
+	self.textedit:SetPosition(self.width - textedit_width/2, 0) -- touching right wall
+	self.textedit.textedit:SetString(tostring(self.value))
+	self.textedit.textedit.OnTextEntered = function()
+		self.value = self.textedit.textedit:GetLineEditString()
 		self:OnValueCommitted()
 	end
 

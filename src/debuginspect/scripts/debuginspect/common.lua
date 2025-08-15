@@ -1,7 +1,3 @@
-local InspectConsoleScreen = require "debuginspect.widgets.screens.inspectconsolescreen"
-local InspectOverlayScreen = require "debuginspect.widgets.screens.inspectoverlayscreen"
-local InspectFunctionPopup = require "debuginspect.widgets.screens.inspectfunctionpopup"
-
 local DICommon = {}
 
 function DICommon.EvalLuaSafe(str)
@@ -32,6 +28,9 @@ function DICommon.FindScreen(class)
 end
 
 function DICommon.OpenInspectOverlay(obj, remote_explore_mode, remote_explore_query)
+	local InspectFunctionPopup = require "debuginspect.widgets.screens.inspectfunctionpopup"
+	local InspectOverlayScreen = require "debuginspect.widgets.screens.inspectoverlayscreen"
+
 	if type(obj) == "function" then
 		-- we have a dedicated function details ui
 		local functiondetailsoverlay, index = DICommon.FindScreen(InspectFunctionPopup)
@@ -78,6 +77,7 @@ end
 
 function DICommon.ToggleInspectConsole()
 	if not TheFrontEnd then return end
+	local InspectConsoleScreen = require "debuginspect.widgets.screens.inspectconsolescreen"
 
 	local overlay, index = DICommon.FindScreen(InspectConsoleScreen)
 	if overlay then

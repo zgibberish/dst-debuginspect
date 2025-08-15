@@ -1,3 +1,4 @@
+local DITextEdit = require "debuginspect.widgets.textedit"
 local DIButton = require "debuginspect.widgets.button"
 local DIConstants = require "debuginspect.constants"
 local DIRowButton = require "debuginspect.widgets.rowbutton"
@@ -132,48 +133,28 @@ local InspectOverlayScreen = Class(Screen, function(self, obj, remote_explore_mo
 	 	end)
 	 	self.button_watch:SetPosition(self.ITEM_HEIGHT*6 + self.ITEM_PADDING*3, 0)
 
-	 	do
-	 		local region_w = self.ITEM_HEIGHT*10
- 			local region_h = self.ITEM_HEIGHT
-			self.filter_bar = self.menu_bar:AddChild(Image("images/global.xml", "square.tex"))
-			self.filter_bar:SetTint(unpack(DIConstants.COLORS.BUTTON.BG_NORMAL))
- 			self.filter_bar:SetSize(region_w, region_h)
-			self.filter_bar:SetPosition(self.ITEM_HEIGHT*12.5 + self.ITEM_PADDING*4, 0)
-			self.filter_bar.textedit = self.filter_bar:AddChild(TextEdit(DIConstants.FONT_MONO, DIConstants.FONTSIZE))
-			self.filter_bar.textedit:SetRegionSize(region_w -self.ITEM_PADDING*2, region_h)
-			self.filter_bar.textedit:SetHAlign(ANCHOR_LEFT)
-			self.filter_bar.textedit.idle_text_color = DIConstants.COLORS.FG_NORMAL
-			self.filter_bar.textedit.edit_text_color = DIConstants.COLORS.FG_NORMAL
-			self.filter_bar.textedit:SetColour(unpack(DIConstants.COLORS.FG_NORMAL))
-			self.filter_bar.textedit:SetEditCursorColour(unpack(DIConstants.COLORS.FG_NORMAL))
-			self.filter_bar.textedit.placeholder_text = self.filter_bar.textedit:AddChild(Text(DIConstants.FONT, DIConstants.FONTSIZE, "Filter keys (case insensitive)"))
-			self.filter_bar.textedit.placeholder_text:SetRegionSize(self.ITEM_HEIGHT*10 -self.ITEM_PADDING*2, self.ITEM_HEIGHT)
-			self.filter_bar.textedit.placeholder_text:SetHAlign(ANCHOR_LEFT)
-			self.filter_bar.textedit.placeholder_text:SetColour(unpack(DIConstants.COLORS.FG_MID))
-			self.filter_bar.textedit.OnTextInputted = function()
-				-- only update per-keystroke to update the placeholder text
-				local user_input = self.filter_bar.textedit:GetString()
-				if user_input == "" then
-					self.filter_bar.textedit.placeholder_text:Show()
-				else
-					self.filter_bar.textedit.placeholder_text:Hide()
-				end
-			end
-			self.filter_bar.textedit.OnTextEntered = function()
-				-- maybe dont re-filter every keystroke, but only when you hit enter,
-				-- cuz it lags SO BADLY on huge tables (like 1k+ items)
-				local user_input = self.filter_bar.textedit:GetString()
-				self.filter_key = (user_input ~= "") and user_input or nil
-				self:Update()
-			end
-	 	end
+		self.filter_bar = self.menu_bar:AddChild(DITextEdit(
+			self.ITEM_HEIGHT*10,
+			self.ITEM_HEIGHT,
+			self.ITEM_PADDING,
+			"Filter keys (case insensitive)"
+		))
+		self.filter_bar:SetPosition(self.ITEM_HEIGHT*12.5 + self.ITEM_PADDING*4, 0)
+		self.filter_bar.textedit.OnTextEntered = function()
+			-- maybe dont re-filter every keystroke, but only when you hit enter,
+			-- cuz it lags SO BADLY on huge tables (like 1k+ items)
+			local user_input = self.filter_bar.textedit:GetString()
+			self.filter_key = (user_input ~= "") and user_input or nil
+			self:Update()
+		end
 
 	 	self.button_clear_filter = self.menu_bar:AddChild(DIButton(self.ITEM_HEIGHT, self.ITEM_HEIGHT))
 		self.button_clear_filter.icon_image = self.button_clear_filter:AddChild(Image("images/global_redux.xml", "close.tex"))
 		self.button_clear_filter.icon_image:SetSize(self.ITEM_HEIGHT*0.5, self.ITEM_HEIGHT*0.5)
 		self.button_clear_filter:SetOnClick(function()
 			self.filter_bar.textedit:SetString("")
-			self.filter_bar.textedit:OnTextInputted()
+			self.filter_bar.textedit:OnTextInputted() -- update placeholder text
+			self.filter_bar.textedit:OnTextEntered() -- update filter
 		end)
 		self.button_clear_filter:SetPosition(self.ITEM_HEIGHT*18 + self.ITEM_PADDING*5, 0)
 
@@ -197,13 +178,13 @@ local InspectOverlayScreen = Class(Screen, function(self, obj, remote_explore_mo
 
 	self.scroll = self.root:AddChild(ScrollableList(
 		{},
-		self.BG_WIDTH*0.9,
+		self.BG_WIDTH-self.ITEM_PADDING*2,
 		self.BG_HEIGHT*0.9 -self.ITEM_HEIGHT*4,
 		self.ITEM_HEIGHT,
 		self.ITEM_PADDING,
 		nil, -- updatefn
 		nil, -- widgetstoupdate
-		-26, -- widgetXOffset
+		nil, -- widgetXOffset
 		nil, -- always_show_static
 		nil, -- starting_offset
 		nil, -- yInit
@@ -317,13 +298,13 @@ function InspectOverlayScreen:Update()
 	local obj_type = type(self.current) -- type to determine how we display the list
 	if obj_type == "number" then
 		self.header:SetString(obj_type)
-		table.insert(items, DIRowText(self.BG_WIDTH, self.ITEM_HEIGHT, self.ITEM_PADDING, "value", self.current, DIConstants.COLORS.TYPES.number))
+		table.insert(items, DIRowText(self.scroll.width, self.ITEM_HEIGHT, self.ITEM_PADDING, "value", self.current, DIConstants.COLORS.TYPES.number))
 	elseif obj_type == "string" then
 		self.header:SetString(obj_type)
-		table.insert(items, DIRowText(self.BG_WIDTH, self.ITEM_HEIGHT, self.ITEM_PADDING, "value", self.current, DIConstants.COLORS.TYPES.string))
+		table.insert(items, DIRowText(self.scroll.width, self.ITEM_HEIGHT, self.ITEM_PADDING, "value", self.current, DIConstants.COLORS.TYPES.string))
 	elseif obj_type == "boolean" then
 		self.header:SetString(obj_type)
-		table.insert(items, DIRowText(self.BG_WIDTH, self.ITEM_HEIGHT, self.ITEM_PADDING, "value", tostring(self.current), DIConstants.COLORS.TYPES.boolean))
+		table.insert(items, DIRowText(self.scroll.width, self.ITEM_PADDING, "value", tostring(self.current), DIConstants.COLORS.TYPES.boolean))
 	elseif obj_type == "table" then
 		local sorted_keys = {}
 
@@ -348,20 +329,20 @@ function InspectOverlayScreen:Update()
 			local v = self.current[k]
 			local obj_type_v = type(v) -- type to determine how to display items in a table
 			if obj_type_v == "number" then
-				local row = DIRowTextEditNumeric(self.BG_WIDTH, self.ITEM_HEIGHT, self.ITEM_PADDING, k, v)
+				local row = DIRowTextEditNumeric(self.scroll.width, self.ITEM_HEIGHT, self.ITEM_PADDING, k, v)
 				row.OnValueCommitted = function() self.current[k] = row.value end
 				table.insert(items, row)
 			elseif obj_type_v == "string" then
-				local row = DIRowTextEdit(self.BG_WIDTH, self.ITEM_HEIGHT, self.ITEM_PADDING, k, v)
+				local row = DIRowTextEdit(self.scroll.width, self.ITEM_HEIGHT, self.ITEM_PADDING, k, v)
 				row.OnValueCommitted = function() self.current[k] = row.value end
 				table.insert(items, row)
 			elseif obj_type_v == "boolean" then
-				local row = DIRowToggle(self.BG_WIDTH, self.ITEM_HEIGHT, self.ITEM_PADDING, k, v)
+				local row = DIRowToggle(self.scroll.width, self.ITEM_HEIGHT, self.ITEM_PADDING, k, v)
 				row.OnValueCommitted = function() self.current[k] = row.state end
 				table.insert(items, row)
 			elseif obj_type_v == "table" then
-				table.insert(items, DIRowButton(
-					self.BG_WIDTH,
+				local row = DIRowButton(
+					self.scroll.width,
 					self.ITEM_HEIGHT,
 					self.ITEM_PADDING,
 					k,
@@ -378,10 +359,13 @@ function InspectOverlayScreen:Update()
 					else
 						self:SetCurrentObject(v)
 					end
-				end))
+				end)
+				row.button:SetTextColour(unpack(DIConstants.COLORS.TYPES["table"]))
+				row.button:SetTextFocusColour(unpack(DIConstants.COLORS.TYPES["table"]))
+				table.insert(items, row)
 			elseif obj_type_v == "function" then
 				local row = DIRowButton(
-					self.BG_WIDTH,
+					self.scroll.width,
 					self.ITEM_HEIGHT,
 					self.ITEM_PADDING,
 					k,
@@ -389,11 +373,11 @@ function InspectOverlayScreen:Update()
 				):SetOnClick(function()
 					TheFrontEnd:PushScreen(InspectFunctionPopup(v))
 				end)
-				row.background_right:SetTextColour(unpack(DIConstants.COLORS.TYPES["function"]))
-				row.background_right:SetTextFocusColour(unpack(DIConstants.COLORS.TYPES["function"]))
+				row.button:SetTextColour(unpack(DIConstants.COLORS.TYPES["function"]))
+				row.button:SetTextFocusColour(unpack(DIConstants.COLORS.TYPES["function"]))
 				table.insert(items, row)
 			else -- userdata, threads, proxied objects (like TheSim), etc
-				table.insert(items, DIRowText(self.BG_WIDTH, self.ITEM_HEIGHT, self.ITEM_PADDING, k, rawstring(v), DIConstants.COLORS.TYPES.other))
+				table.insert(items, DIRowText(self.scroll.width, self.ITEM_HEIGHT, self.ITEM_PADDING, k, rawstring(v), DIConstants.COLORS.TYPES.other))
 			end
 		end
 

@@ -1,8 +1,8 @@
 local DIConstants = require "debuginspect.constants"
-local DIRowTextEdit = require "debuginspect.widgets.rowtextedit"
+local DITextEdit = require "debuginspect.widgets.textedit"
+local TextEdit = require "widgets.textedit" --NOTE: need this to use TextEdit.OnRawKey
 local Image = require "widgets.image"
 local Screen = require "widgets.screen"
-local TextEdit = require "widgets.textedit"
 local Text = require "widgets.text"
 
 local InspectConsoleScreen = Class(Screen, function(self)
@@ -44,40 +44,31 @@ local InspectConsoleScreen = Class(Screen, function(self)
 		self:SetRemoteExecute(self.remote_execute) -- default fallback
 	end
 
-	self.background_textedit = self.root:AddChild(Image("images/global.xml", "square.tex"))
-	self.background_textedit:SetSize(region_w -self.ITEM_PADDING*2, self.ITEM_HEIGHT)
-	self.background_textedit:SetTint(unpack(DIConstants.COLORS.OVERLAY_HIGHLIGHTED))
-	self.background_textedit:SetPosition(0, -12)
-	self.inputbar = self.root:AddChild(TextEdit(DIConstants.FONT_MONO, DIConstants.FONTSIZE))
-	do
-		local w, h = self.background_textedit:GetSize()
-		self.inputbar:SetRegionSize(w -self.ITEM_PADDING*2, h)
-	end
+	self.inputbar = self.root:AddChild(DITextEdit(
+		region_w - self.ITEM_PADDING*2,
+		self.ITEM_HEIGHT,
+		self.ITEM_PADDING,
+		"Lua expression"
+	))
 	self.inputbar:SetPosition(0, -self.ITEM_HEIGHT/2)
-	self.inputbar:SetHAlign(ANCHOR_LEFT)
-	self.inputbar.idle_text_color = DIConstants.COLORS.FG_NORMAL
-	self.inputbar.edit_text_color = DIConstants.COLORS.FG_NORMAL
-	self.inputbar:SetColour(unpack(DIConstants.COLORS.FG_NORMAL))
-	self.inputbar:SetEditCursorColour(unpack(DIConstants.COLORS.FG_NORMAL))
-	self.inputbar.OnTextEntered = function()
-		local query = self.inputbar:GetLineEditString()
+	self.inputbar.textedit.OnTextEntered = function()
+		local query = self.inputbar.textedit:GetLineEditString()
 		self:Commit(query)
 		self:Close()
 	end
-	self.inputbar:SetForceEdit(true)
-	self.inputbar.OnStopForceEdit = function() self:Close() end
-	self.inputbar:SetPassControlToScreen(CONTROL_CANCEL, true)
-	self.inputbar.OnRawKey = function(s, key, down)
-		if TextEdit.OnRawKey(self.inputbar, key, down) then
+	self.inputbar.textedit.OnStopForceEdit = function() self:Close() end
+	self.inputbar.textedit:SetPassControlToScreen(CONTROL_CANCEL, true)
+	self.inputbar.textedit.OnRawKey = function(s, key, down)
+		if TextEdit.OnRawKey(self.inputbar.textedit, key, down) then
 			return true
 		end
 		self:OnRawKeyHandler(key, down)
 	end
-	self.inputbar.validrawkeys[KEY_LCTRL] = true
-	self.inputbar.validrawkeys[KEY_RCTRL] = true
-	self.inputbar.validrawkeys[KEY_UP] = true
-	self.inputbar.validrawkeys[KEY_DOWN] = true
-	self.inputbar.validrawkeys[KEY_V] = true
+	self.inputbar.textedit.validrawkeys[KEY_LCTRL] = true
+	self.inputbar.textedit.validrawkeys[KEY_RCTRL] = true
+	self.inputbar.textedit.validrawkeys[KEY_UP] = true
+	self.inputbar.textedit.validrawkeys[KEY_DOWN] = true
+	self.inputbar.textedit.validrawkeys[KEY_V] = true
 
 	return self
 end)
@@ -85,8 +76,8 @@ end)
 function InspectConsoleScreen:OnBecomeActive()
 	self._base.OnBecomeActive(self)
 
-	self.inputbar:SetFocus()
-	self.inputbar:SetEditing(true)
+	self.inputbar.textedit:SetFocus()
+	self.inputbar.textedit:SetEditing(true)
 end
 
 function InspectConsoleScreen:SetRemoteExecute(enable_remote)
@@ -178,7 +169,8 @@ function InspectConsoleScreen:OnRawKeyHandler(key, down)
 			self.history_idx = len
 		end
 		local historyline = history[self.history_idx]
-		self.inputbar:SetString(historyline.str)
+		self.inputbar.textedit:SetString(historyline.str)
+		self.inputbar.textedit:OnTextInputted()
 		self:SetRemoteExecute(historyline.remote or false)
 		return true
 	end
@@ -188,15 +180,16 @@ function InspectConsoleScreen:OnRawKeyHandler(key, down)
 		if len <= 0 then return end
 		if self.history_idx == nil then return end
 		if self.history_idx >= len then
-			self.inputbar:SetString("")
+			self.inputbar.textedit:SetString("")
 			self:SetRemoteExecute(self.can_remote_execute)
 			self.history_idx = len + 1
 		else
 			self.history_idx = self.history_idx + 1
 			local historyline = history[self.history_idx]
-			self.inputbar:SetString(historyline.str)
+			self.inputbar.textedit:SetString(historyline.str)
 			self:SetRemoteExecute(historyline.remote or false)
 		end
+		self.inputbar.textedit:OnTextInputted()
 		return true
 	end
 
