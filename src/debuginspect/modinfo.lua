@@ -8,7 +8,7 @@ Press F1 to open the Debug Inspect console.
  - UP/DOWN for query history (using DST's console screen's history, and they both save to the same history).
  - CTRL+V to paste from clipboard.]]
 author = "gibbert"
-version = "0.1"
+version = "0.2"
 api_version = 10
 
 rotwood_compatible = false
