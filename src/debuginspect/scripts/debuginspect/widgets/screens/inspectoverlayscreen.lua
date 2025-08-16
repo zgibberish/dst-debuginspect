@@ -1,4 +1,3 @@
-local DITextEdit = require "debuginspect.widgets.textedit"
 local DIButton = require "debuginspect.widgets.button"
 local DIConstants = require "debuginspect.constants"
 local DIRowButton = require "debuginspect.widgets.rowbutton"
@@ -6,13 +5,14 @@ local DIRowTextEditNumeric = require "debuginspect.widgets.rowtexteditnumeric"
 local DIRowTextEdit = require "debuginspect.widgets.rowtextedit"
 local DIRowText = require "debuginspect.widgets.rowtext"
 local DIRowToggle = require "debuginspect.widgets.rowtoggle"
+local DITextEdit = require "debuginspect.widgets.textedit"
 local Image = require "widgets.image"
+local InspectFunctionPopup = require "debuginspect.widgets.screens.inspectfunctionpopup"
+local ModifyItemPopup = require "debuginspect.widgets.screens.modifyitempopup"
 local Screen = require "widgets.screen"
 local ScrollableList = require "widgets.scrollablelist"
-local TextEdit = require "widgets.textedit"
 local Text = require "widgets.text"
 local Widget = require "widgets.widget"
-local InspectFunctionPopup = require "debuginspect.widgets.screens.inspectfunctionpopup"
 
 local function table_key_count(obj_table)
 	local count = 0
@@ -173,6 +173,16 @@ local InspectOverlayScreen = Class(Screen, function(self, obj, remote_explore_mo
 		end)
 		self.button_dump_deep:SetPosition(self.ITEM_HEIGHT*8.5 +self.ITEM_PADDING, -self.ITEM_HEIGHT -self.ITEM_PADDING)
 
+		self.button_add_item = self.menu_bar:AddChild(DIButton(self.ITEM_HEIGHT*3, self.ITEM_HEIGHT, "Add Item"))
+		self.button_add_item:SetOnClick(function()
+			if type(self.current) ~= "table" then return end
+			TheFrontEnd:PushScreen(ModifyItemPopup(nil, nil, function(new_key, new_value)
+				self.current[new_key] = new_value
+				self:Update()
+			end))
+		end)
+		self.button_add_item:SetPosition(self.ITEM_HEIGHT*12 +self.ITEM_PADDING*2, -self.ITEM_HEIGHT -self.ITEM_PADDING)
+
 		self.menu_bar:SetPosition(-self.BG_WIDTH/2 +self.ITEM_HEIGHT/2 +self.ITEM_PADDING, self.BG_HEIGHT*0.38)
 	end
 
@@ -291,20 +301,123 @@ function InspectOverlayScreen:Update()
 		self.header:SetString("nil")
 	end
 
-	self:_SetDumpButtonsEnabled(type(self.current) == "table")
+	self:_SetTableButtonsEnabled(type(self.current) == "table")
 
 	-- rebuild list
 	local items = {}
-	local obj_type = type(self.current) -- type to determine how we display the list
-	if obj_type == "number" then
+
+	local function row_layout_common_post(row_widget)
+		row_widget.button_modify = row_widget:AddChild(DIButton(self.ITEM_HEIGHT, self.ITEM_HEIGHT))
+		row_widget.button_modify:SetPosition(self.scroll.width -self.ITEM_HEIGHT/2, 0)
+
+		row_widget.button_modify.icon_image = row_widget.button_modify:AddChild(Image("images/debuginspect.xml", "edit.tex"))
+		row_widget.button_modify.icon_image:SetSize(self.ITEM_HEIGHT*0.5, self.ITEM_HEIGHT*0.5)
+
+		-- this is called down below to let this row widget know
+		-- the initial key and value of the item, so the modify item
+		-- popup can do its thing
+		-- gibbert: and also this mess of nested fns looks horrendous lmaooo
+		-- pls refactor this later on maybe
+		row_widget.SetupKeyValue = function(row_widget_self, initial_key, initial_value)
+			row_widget_self.button_modify:SetOnClick(function()
+				TheFrontEnd:PushScreen(ModifyItemPopup(
+					initial_key,
+					initial_value,
+					function(new_key, new_value) -- new_key cannot be nil dw
+						if new_key ~= initial_key then
+							self.current[initial_key] = nil
+						end
+						self.current[new_key] = new_value
+						self:Update()
+					end
+				))
+			end)
+			return row_widget_self
+		end
+		return row_widget
+	end
+
+	local function row_text(name, value, color_value)
+		local row_widget = Widget()
+		row_widget.main = row_widget:AddChild(DIRowText(
+			self.scroll.width -self.ITEM_HEIGHT -self.ITEM_PADDING*2,
+			self.ITEM_HEIGHT,
+			self.ITEM_PADDING,
+			name,
+			value,
+			color_value
+		))
+
+		return row_layout_common_post(row_widget)
+	end
+	local function row_textedit(name, value, submitfn)
+		local row_widget = Widget()
+		row_widget.main = row_widget:AddChild(DIRowTextEdit(
+			self.scroll.width -self.ITEM_HEIGHT -self.ITEM_PADDING*2,
+			self.ITEM_HEIGHT,
+			self.ITEM_PADDING,
+			name,
+			value
+		))
+		row_widget.main.OnValueCommitted = function()
+			if submitfn then submitfn(row_widget.main.value) end
+		end
+
+		return row_layout_common_post(row_widget)
+	end
+	local function row_texteditnumeric(name, value, submitfn)
+		local row_widget = Widget()
+		row_widget.main = row_widget:AddChild(DIRowTextEditNumeric(
+			self.scroll.width -self.ITEM_HEIGHT -self.ITEM_PADDING*2,
+			self.ITEM_HEIGHT,
+			self.ITEM_PADDING,
+			name,
+			value
+		))
+		row_widget.main.OnValueCommitted = function()
+			if submitfn then submitfn(row_widget.main.value) end
+		end
+
+		return row_layout_common_post(row_widget)
+	end
+	local function row_toggle(name, state, submitfn)
+		local row_widget = Widget()
+		row_widget.main = row_widget:AddChild(DIRowToggle(
+			self.scroll.width -self.ITEM_HEIGHT -self.ITEM_PADDING*2,
+			self.ITEM_HEIGHT,
+			self.ITEM_PADDING,
+			name,
+			state
+		))
+		row_widget.main.OnValueCommitted = function()
+			if submitfn then submitfn(row_widget.main.state) end
+		end
+
+		return row_layout_common_post(row_widget)
+	end
+	local function row_button(name, value, color_value, onclickfn)
+		local row_widget = Widget()
+		row_widget.main = row_widget:AddChild(DIRowButton(
+			self.scroll.width -self.ITEM_HEIGHT -self.ITEM_PADDING*2,
+			self.ITEM_HEIGHT,
+			self.ITEM_PADDING,
+			name,
+			value
+		))
+		if color_value then
+			row_widget.main.button:SetTextColour(unpack(color_value))
+			row_widget.main.button:SetTextFocusColour(unpack(color_value))
+		end
+		row_widget.main:SetOnClick(onclickfn)
+
+		return row_layout_common_post(row_widget)
+	end
+
+	local obj_type = type(self.current)
+	if obj_type == "number" or obj_type == "string" or obj_type == "boolean" then
 		self.header:SetString(obj_type)
-		table.insert(items, DIRowText(self.scroll.width, self.ITEM_HEIGHT, self.ITEM_PADDING, "value", self.current, DIConstants.COLORS.TYPES.number))
-	elseif obj_type == "string" then
-		self.header:SetString(obj_type)
-		table.insert(items, DIRowText(self.scroll.width, self.ITEM_HEIGHT, self.ITEM_PADDING, "value", self.current, DIConstants.COLORS.TYPES.string))
-	elseif obj_type == "boolean" then
-		self.header:SetString(obj_type)
-		table.insert(items, DIRowText(self.scroll.width, self.ITEM_PADDING, "value", tostring(self.current), DIConstants.COLORS.TYPES.boolean))
+		local row = DIRowText(self.scroll.width, self.ITEM_HEIGHT, self.ITEM_PADDING, "value", tostring(self.current), DIConstants.COLORS.TYPES[obj_type])
+		table.insert(items, row)
 	elseif obj_type == "table" then
 		local sorted_keys = {}
 
@@ -329,55 +442,49 @@ function InspectOverlayScreen:Update()
 			local v = self.current[k]
 			local obj_type_v = type(v) -- type to determine how to display items in a table
 			if obj_type_v == "number" then
-				local row = DIRowTextEditNumeric(self.scroll.width, self.ITEM_HEIGHT, self.ITEM_PADDING, k, v)
-				row.OnValueCommitted = function() self.current[k] = row.value end
+				local row = row_texteditnumeric(k, v, function(value) self.current[k] = value end)
+					:SetupKeyValue(k, v)
 				table.insert(items, row)
 			elseif obj_type_v == "string" then
-				local row = DIRowTextEdit(self.scroll.width, self.ITEM_HEIGHT, self.ITEM_PADDING, k, v)
-				row.OnValueCommitted = function() self.current[k] = row.value end
+				local row = row_textedit(k, v, function(value) self.current[k] = value end)
+					:SetupKeyValue(k, v)
 				table.insert(items, row)
 			elseif obj_type_v == "boolean" then
-				local row = DIRowToggle(self.scroll.width, self.ITEM_HEIGHT, self.ITEM_PADDING, k, v)
-				row.OnValueCommitted = function() self.current[k] = row.state end
+				local row = row_toggle(k, v, function(state) self.current[k] = state end)
+					:SetupKeyValue(k, v)
 				table.insert(items, row)
 			elseif obj_type_v == "table" then
-				local row = DIRowButton(
-					self.scroll.width,
-					self.ITEM_HEIGHT,
-					self.ITEM_PADDING,
+				local row = row_button(
 					k,
-					rawstring(v).." ("..tostring(table_key_count(v)).." fields)"
-				):SetOnClick(function()
-					if self.remote_explore_mode then
-						local next_query = nil
-						local obj_type_k = type(k)
-						if obj_type_k == "string" then next_query = self.current_query.."[\""..k.."\"]" end
-						if obj_type_k == "boolean" then next_query = self.current_query.."["..tostring(k).."]" end
-						if obj_type_k == "number" then next_query = self.current_query.."["..tostring(k).."]" end
-						if not next_query then return end
-						self:SetCurrentObject_Remote(next_query)
-					else
-						self:SetCurrentObject(v)
+					rawstring(v).." ("..tostring(table_key_count(v)).." fields)",
+					DIConstants.COLORS.TYPES["table"],
+					function()
+						if self.remote_explore_mode then
+							local next_query = nil
+							local obj_type_k = type(k)
+							if obj_type_k == "string" then next_query = self.current_query.."[\""..k.."\"]" end
+							if obj_type_k == "boolean" then next_query = self.current_query.."["..tostring(k).."]" end
+							if obj_type_k == "number" then next_query = self.current_query.."["..tostring(k).."]" end
+							if not next_query then return end
+							self:SetCurrentObject_Remote(next_query)
+						else
+							self:SetCurrentObject(v)
+						end
 					end
-				end)
-				row.button:SetTextColour(unpack(DIConstants.COLORS.TYPES["table"]))
-				row.button:SetTextFocusColour(unpack(DIConstants.COLORS.TYPES["table"]))
+				):SetupKeyValue(k, v)
 				table.insert(items, row)
 			elseif obj_type_v == "function" then
-				local row = DIRowButton(
-					self.scroll.width,
-					self.ITEM_HEIGHT,
-					self.ITEM_PADDING,
+				local row = row_button(
 					k,
-					rawstring(v)
-				):SetOnClick(function()
-					TheFrontEnd:PushScreen(InspectFunctionPopup(v))
-				end)
-				row.button:SetTextColour(unpack(DIConstants.COLORS.TYPES["function"]))
-				row.button:SetTextFocusColour(unpack(DIConstants.COLORS.TYPES["function"]))
+					rawstring(v),
+					DIConstants.COLORS.TYPES["function"],
+					function() TheFrontEnd:PushScreen(InspectFunctionPopup(v)) end
+				):SetupKeyValue(k, v)
 				table.insert(items, row)
 			else -- userdata, threads, proxied objects (like TheSim), etc
-				table.insert(items, DIRowText(self.scroll.width, self.ITEM_HEIGHT, self.ITEM_PADDING, k, rawstring(v), DIConstants.COLORS.TYPES.other))
+				local row = row_text(k, rawstring(v), DIConstants.COLORS.TYPES["other"])
+					:SetupKeyValue(k, v)
+				table.insert(items, row)
 			end
 		end
 
@@ -423,17 +530,21 @@ function InspectOverlayScreen:_SetArrowButtonEnabled(button_arrow, enabled)
 	return self
 end
 
-function InspectOverlayScreen:_SetDumpButtonsEnabled(enabled)
+function InspectOverlayScreen:_SetTableButtonsEnabled(enabled)
 	if enabled then
 		self.button_dump_shallow:SetTextColour(unpack(DIConstants.COLORS.FG_NORMAL))
 		self.button_dump_shallow:SetTextFocusColour(unpack(DIConstants.COLORS.FG_NORMAL))
 		self.button_dump_deep:SetTextColour(unpack(DIConstants.COLORS.FG_NORMAL))
 		self.button_dump_deep:SetTextFocusColour(unpack(DIConstants.COLORS.FG_NORMAL))
+		self.button_add_item:SetTextColour(unpack(DIConstants.COLORS.FG_NORMAL))
+		self.button_add_item:SetTextFocusColour(unpack(DIConstants.COLORS.FG_NORMAL))
 	else
 		self.button_dump_shallow:SetTextColour(unpack(DIConstants.COLORS.FG_DISABLED))
 		self.button_dump_shallow:SetTextFocusColour(unpack(DIConstants.COLORS.FG_DISABLED))
 		self.button_dump_deep:SetTextColour(unpack(DIConstants.COLORS.FG_DISABLED))
 		self.button_dump_deep:SetTextFocusColour(unpack(DIConstants.COLORS.FG_DISABLED))
+		self.button_add_item:SetTextColour(unpack(DIConstants.COLORS.FG_DISABLED))
+		self.button_add_item:SetTextFocusColour(unpack(DIConstants.COLORS.FG_DISABLED))
 	end
 
 	return self

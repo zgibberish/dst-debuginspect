@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<Atlas>
+	<Texture filename="debuginspect.tex" />
+	<Elements>
+		<Element name="arrow_down.tex" u1="0.000244140625" u2="0.124755859375" v1="0.5009765625" v2="0.9990234375" />
+		<Element name="arrow_left.tex" u1="0.125244140625" u2="0.249755859375" v1="0.5009765625" v2="0.9990234375" />
+		<Element name="arrow_right.tex" u1="0.250244140625" u2="0.374755859375" v1="0.5009765625" v2="0.9990234375" />
+		<Element name="arrow_up.tex" u1="0.375244140625" u2="0.499755859375" v1="0.5009765625" v2="0.9990234375" />
+		<Element name="edit.tex" u1="0.500244140625" u2="0.624755859375" v1="0.5009765625" v2="0.9990234375" />
+		<Element name="symbol_type_boolean.tex" u1="0.625244140625" u2="0.749755859375" v1="0.5009765625" v2="0.9990234375" />
+		<Element name="symbol_type_function.tex" u1="0.750244140625" u2="0.874755859375" v1="0.5009765625" v2="0.9990234375" />
+		<Element name="symbol_type_nil.tex" u1="0.875244140625" u2="0.999755859375" v1="0.5009765625" v2="0.9990234375" />
+		<Element name="symbol_type_number.tex" u1="0.000244140625" u2="0.124755859375" v1="0.0009765625" v2="0.4990234375" />
+		<Element name="symbol_type_other.tex" u1="0.125244140625" u2="0.249755859375" v1="0.0009765625" v2="0.4990234375" />
+		<Element name="symbol_type_string.tex" u1="0.250244140625" u2="0.374755859375" v1="0.0009765625" v2="0.4990234375" />
+		<Element name="symbol_type_table.tex" u1="0.375244140625" u2="0.499755859375" v1="0.0009765625" v2="0.4990234375" />
+	</Elements>
+</Atlas>

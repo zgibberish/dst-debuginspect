@@ -1,3 +1,8 @@
+Assets = {
+	Asset("ATLAS", "images/debuginspect.xml"),
+	Asset("IMAGE", "images/debuginspect.tex")
+}
+
 local DICommon = require "debuginspect.common"
 local bind_inspectconsole = GetModConfigData("bind_inspectconsole")
 
